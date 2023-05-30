@@ -89,3 +89,30 @@ predicted_label = class_labels[predicted_class]
 
 print("Image:", image_path)
 print("Predicted Class Label:", predicted_label)
+
+#Confusion matrix
+
+from sklearn.metrics import confusion_matrix
+
+# Compute the confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+# Print the confusion matrix
+print("Confusion Matrix:")
+print(cm)
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Compute the confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+# Define the class names
+class_names = list(class_paths.keys())
+
+# Create a heatmap using seaborn
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, cmap='Blues', fmt='d', xticklabels=class_names, yticklabels=class_names)
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.show(
