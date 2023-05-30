@@ -1,0 +1,91 @@
+import os
+import cv2
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from sklearn.preprocessing import LabelEncoder
+
+# Define the directory paths for the classes
+class_paths = {
+    'moderate_demented': r'C:\Users\srini\OneDrive\Documents\Deep Learning\Alzheimer_s Dataset\TRAIN DATA\ModerateDemented' ,
+    'mild_demented': r'C:\Users\srini\OneDrive\Documents\Deep Learning\Alzheimer_s Dataset\TRAIN DATA\MildDemented',
+    'non_demented': r'C:\Users\srini\OneDrive\Documents\Deep Learning\Alzheimer_s Dataset\TRAIN DATA\NonDemented',
+    'very_mild_demented': r'C:\Users\srini\OneDrive\Documents\Deep Learning\Alzheimer_s Dataset\TRAIN DATA\VeryMildDemented'
+}
+
+# Function to load and preprocess the dataset
+def load_data(class_paths):
+    images = []
+    labels = []
+    class_names = list(class_paths.keys())
+    for class_name, class_path in class_paths.items():
+        for filename in os.listdir(class_path):
+            image = cv2.imread(os.path.join(class_path, filename))
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            image = cv2.resize(image, (164, 64))  # Adjust size as needed
+            images.append(image)
+            labels.append(class_name)
+    return np.array(images), np.array(labels)
+
+# Load the data for each class
+x_data, y_data = load_data(class_paths)
+
+# Normalize the pixel values
+x_data = x_data / 255.0
+
+# Perform label encoding for the target labels
+label_encoder = LabelEncoder()
+y_data = label_encoder.fit_transform(y_data)
+
+# Split the data into train and test sets
+from sklearn.model_selection import train_test_split
+x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=42)
+
+# Create the CNN model
+model = models.Sequential()
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(64, 164, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Flatten())
+model.add(layers.Dense(64, activation='relu'))
+model.add(layers.Dense(4, activation='softmax'))  # 4 output neurons for multi-class classification
+
+# Compile and train the model
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs=10, batch_size=8, validation_data=(x_test, y_test))
+
+# Evaluate the model on the test set
+test_loss, test_acc = model.evaluate(x_test, y_test, verbose=2)
+print("Test accuracy:", test_acc)
+
+# Get the predicted class labels for the test set
+y_pred = np.argmax(model.predict(x_test), axis=1)
+
+# Decode the predicted labels to the corresponding classes
+class_names = list(class_paths.keys())
+predicted_classes = [class_names[label] for label in y_pred]
+
+# Print the predicted class labels for each image in the test set
+for i in range(len(x_test)):
+    print("Image", i+1, "predicted as:", predicted_classes[i])
+    
+# PREDICTION
+image_path = r"C:\Users\srini\OneDrive\Documents\Deep Learning\Alzheimer_s Dataset\test\VeryMildDemented\28 (33).jpg"
+image = cv2.imread(image_path)
+image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+image = cv2.resize(image, (164, 64))  # Adjust size as needed
+image = image / 255.0
+image = np.expand_dims(image, axis=0)
+
+# Predict the class label for the image
+class_labels = {0: "Mild Demented", 1: "Moderate Demented", 2: "Non-Demented" , 3: "Very Mild Demented"}
+predictions = model.predict(image)
+predicted_class = np.argmax(predictions)
+
+predicted_label = class_labels[predicted_class]
+
+print("Image:", image_path)
+print("Predicted Class Label:", predicted_label)
