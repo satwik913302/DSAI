@@ -116,3 +116,19 @@ plt.title('Confusion Matrix')
 plt.xlabel('Predicted')
 plt.ylabel('True')
 plt.show()
+
+#ACCURACY
+import matplotlib.pyplot as plt
+
+# Train the model and record the training history
+history = model.fit(x_train, y_train, epochs=10, batch_size=8, validation_data=(x_test, y_test))
+
+# Plot the accuracy graph
+plt.figure(figsize=(8, 6))
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
